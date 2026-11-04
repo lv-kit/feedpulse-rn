@@ -41,7 +41,10 @@ export async function pickTarget(options: PickTargetOptions = {}): Promise<Feedp
     return target;
   } catch (e) {
     if (e instanceof FeedpulsePickError) throw e;
-    throw new FeedpulsePickError('native_error', e instanceof Error ? e.message : String(e));
+    const code = (e as { code?: unknown } | null)?.code;
+    const message = e instanceof Error ? e.message : String(e);
+    if (code === 'unavailable' || code === 'already_picking') throw new FeedpulsePickError(code, message);
+    throw new FeedpulsePickError('native_error', message);
   } finally {
     picking = false;
   }

@@ -79,3 +79,10 @@ describe('sanitizeTarget (web #106 と同一規則)', () => {
     expect(sanitizeTarget({ platform: 'ios', id: 'a' })?.platform).toBe('react-native');
   });
 });
+
+test('native が返す unavailable / already_picking の code をそのまま伝える', async () => {
+  for (const code of ['unavailable', 'already_picking'] as const) {
+    pick.mockRejectedValue(Object.assign(new Error('x'), { code }));
+    await expect(pickTarget()).rejects.toMatchObject({ code });
+  }
+});
