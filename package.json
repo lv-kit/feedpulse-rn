@@ -4,12 +4,21 @@
   "description": "Feedpulse React Native SDK (headless). Includes the optional target picker bridge.",
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "files": ["src", "ios", "android", "feedpulse-react-native.podspec"],
+  "files": [
+    "src",
+    "ios",
+    "android",
+    "feedpulse-react-native.podspec",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
-  "peerDependencies": { "react": "*", "react-native": "*" },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/react": "^18.2.0",
@@ -22,6 +31,12 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "testMatch": ["**/__tests__/**/*.test.ts"]
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lv-kit/feedpulse-rn.git"
   }
 }
