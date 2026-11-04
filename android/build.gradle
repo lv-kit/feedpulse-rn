@@ -9,6 +9,5 @@ android {
 
 dependencies {
     implementation "com.facebook.react:react-android"
-    // TODO: Android SDK (#115) の座標確定後に有効化。
-    // implementation "dev.feedpulse:feedpulse-android:<version>"
+    implementation "com.feedpulse:feedpulse-picker:0.1.0"
 }
