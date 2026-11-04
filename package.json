@@ -38,5 +38,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lv-kit/feedpulse-rn.git"
-  }
+  },
+  "license": "MIT"
 }
