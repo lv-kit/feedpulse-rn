@@ -1,0 +1,14 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace "dev.feedpulse.reactnative"
+    compileSdkVersion 34
+    defaultConfig { minSdkVersion 24; targetSdkVersion 34 }
+}
+
+dependencies {
+    implementation "com.facebook.react:react-android"
+    // TODO: Android SDK (#115) の座標確定後に有効化。
+    // implementation "dev.feedpulse:feedpulse-android:<version>"
+}
