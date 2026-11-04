@@ -1,7 +1,8 @@
 /**
  * `context.auto.target` の型とサニタイズ。
  * スキーマの正本は lv-kit/feedpulse-web #106 (packages/shared/src/context.ts)。
- * 上限値は #106 確定までの仮置き。確定したら TARGET_LIMITS を合わせる。
+ * 上限値は web の sanitizeTarget (feat/issue-105-target-picker 738b80f) と一致させる。
+ * サーバーは超過時に target ごと捨てるので、SDK 側で事前に整える。
  */
 export type TargetPlatform = 'web' | 'ios' | 'android' | 'flutter' | 'react-native';
 
@@ -26,18 +27,32 @@ export interface FeedpulseTarget {
 
 export const TARGET_LIMITS = {
   screen: 512,
-  id: 128,
+  id: 200,
   path: 512,
-  label: 80,
+  label: 200,
+  rectAbs: 1_000_000,
 } as const;
+
+/** ネイティブへ渡す label の既定の切り詰め長（サーバー上限より短く、先頭のみ）。 */
+export const LABEL_PREFERRED_LENGTH = 80;
 
 const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/g;
 
-function str(v: unknown, max: number): string | undefined {
-  if (typeof v !== 'string') return undefined;
-  const s = v.replace(CONTROL_CHARS, '').trim();
-  if (!s) return undefined;
-  return Array.from(s).slice(0, max).join('');
+/** 制御文字除去→trim。truncate=true なら max (UTF-16 長) まで切る。false で超過なら null（サーバーは捨てる）。 */
+function str(v: unknown, max: number, truncate = false): string | undefined | null {
+  if (v === undefined || v === null) return undefined;
+  if (typeof v !== 'string') return null;
+  let s = v.replace(CONTROL_CHARS, '').trim();
+  if (s.length > max) {
+    if (!truncate) return null;
+    let out = '';
+    for (const ch of s) {
+      if (out.length + ch.length > max) break;
+      out += ch;
+    }
+    s = out.trim();
+  }
+  return s === '' ? undefined : s;
 }
 
 function rect(v: unknown): TargetRect | undefined {
@@ -46,7 +61,8 @@ function rect(v: unknown): TargetRect | undefined {
   const out: number[] = [];
   for (const k of ['x', 'y', 'w', 'h']) {
     const n = r[k];
-    if (typeof n !== 'number' || !Number.isFinite(n)) return undefined;
+    if (typeof n !== 'number' || !Number.isFinite(n) || Math.abs(n) > TARGET_LIMITS.rectAbs) return undefined;
+    if ((k === 'w' || k === 'h') && n < 0) return undefined;
     out.push(n);
   }
   return { x: out[0], y: out[1], w: out[2], h: out[3] };
@@ -55,7 +71,7 @@ function rect(v: unknown): TargetRect | undefined {
 /**
  * ネイティブから返った値を #106 の形に整える。
  * `platform` は常に 'react-native' で上書きする（Issue #116）。
- * 使える項目が id / path / rect のいずれも無ければ null。
+ * id と path のどちらも無ければ null（サーバーも捨てる）。
  */
 export function sanitizeTarget(raw: unknown): FeedpulseTarget | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -64,13 +80,15 @@ export function sanitizeTarget(raw: unknown): FeedpulseTarget | null {
   const screen = str(r.screen, TARGET_LIMITS.screen);
   const id = str(r.id, TARGET_LIMITS.id);
   const path = str(r.path, TARGET_LIMITS.path);
-  const label = str(r.label, TARGET_LIMITS.label);
-  const rc = rect(r.rect);
+  const label = str(r.label, TARGET_LIMITS.label, true);
+  // id / path が上限超過・型違いならサーバーが target ごと捨てるので null。screen は欠落扱いで続行。
+  if (id === null || path === null) return null;
+  if (!id && !path) return null;
   if (screen) target.screen = screen;
   if (id) target.id = id;
   if (path) target.path = path;
+  const rc = rect(r.rect);
   if (rc) target.rect = rc;
   if (label) target.label = label;
-  if (!id && !path && !rc) return null;
   return target;
 }

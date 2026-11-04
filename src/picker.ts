@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { getNativePicker } from './NativeFeedpulsePicker';
-import { FeedpulseTarget, TARGET_LIMITS, sanitizeTarget } from './target';
+import { FeedpulseTarget, LABEL_PREFERRED_LENGTH, sanitizeTarget } from './target';
 
 export type PickErrorCode = 'unavailable' | 'already_picking' | 'invalid_target' | 'native_error';
 
@@ -33,7 +33,7 @@ export async function pickTarget(options: PickTargetOptions = {}): Promise<Feedp
   }
   picking = true;
   try {
-    const raw = await native.pickTarget({ screen: options.screen, labelMaxLength: TARGET_LIMITS.label });
+    const raw = await native.pickTarget({ screen: options.screen, labelMaxLength: LABEL_PREFERRED_LENGTH });
     if (raw == null) return null;
     const target = sanitizeTarget(raw);
     if (!target) throw new FeedpulsePickError('invalid_target', 'Native picker returned an unusable target');

@@ -11,11 +11,11 @@ const target = await pickTarget({ screen: 'Checkout' }); // キャンセル時�
 
 - `testID` を付けた要素をタップすると `target.id` に入る（iOS: accessibilityIdentifier、Android: View tag）。
 - `target.platform` は常に `react-native`。
-- 入力値は取得しない。`label` は先頭80文字。
+- 入力値は取得しない。`label` は先頭80文字をネイティブへ要求（上限200）。
 - エラー: `FeedpulsePickError` (`unavailable` / `already_picking` / `invalid_target` / `native_error`)。
 - `cancelPickTarget()` で実行中のピッカーを閉じる（`pickTarget` は null で解決）。
 
 ## 未接続
 - iOS: `ios/FeedpulsePicker.swift` は iOS SDK (#114) 待ち。
 - Android: `FeedpulsePickerModule.kt` は Android SDK (#115) 待ち。
-- `target` の上限値 (`TARGET_LIMITS`) は #106 確定待ちの仮置き。
+- 上限値 (`TARGET_LIMITS`) は web `feat/issue-105-target-picker` の #106 実装と一致済み（id 200 / label 200 / screen,path 512）。サーバーは id・path 超過で target ごと捨てる。

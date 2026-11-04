@@ -23,7 +23,7 @@ test('キャンセルは null（reject しない）', async () => {
 });
 
 test('不正な戻り値は invalid_target', async () => {
-  pick.mockResolvedValue({ label: 'only label' });
+  pick.mockResolvedValue({ label: 'only label', rect: { x: 0, y: 0, w: 1, h: 1 } });
   await expect(pickTarget()).rejects.toMatchObject({ code: 'invalid_target' });
 });
 
@@ -53,15 +53,29 @@ test('cancelPickTarget はネイティブへ委譲', () => {
   expect(cancel).toHaveBeenCalled();
 });
 
-describe('sanitizeTarget', () => {
-  test('長さ上限・制御文字・NaN rect', () => {
-    const t = sanitizeTarget({ id: 'a\u0000b', label: 'x'.repeat(500), rect: { x: NaN, y: 0, w: 1, h: 1 }, path: 'p' });
+describe('sanitizeTarget (web #106 と同一規則)', () => {
+  test('制御文字除去・label は 200 に切り詰め・NaN rect は捨てる', () => {
+    const t = sanitizeTarget({ id: 'a\u0000b', label: 'x'.repeat(500), rect: { x: NaN, y: 0, w: 1, h: 1 } });
     expect(t?.id).toBe('ab');
-    expect(t?.label?.length).toBe(80);
+    expect(t?.label?.length).toBe(200);
     expect(t?.rect).toBeUndefined();
   });
-  test('型違いは捨てる', () => {
+  test('rect: 負の w/h・絶対値超過は捨てる', () => {
+    expect(sanitizeTarget({ id: 'a', rect: { x: 0, y: 0, w: -1, h: 1 } })?.rect).toBeUndefined();
+    expect(sanitizeTarget({ id: 'a', rect: { x: 2e6, y: 0, w: 1, h: 1 } })?.rect).toBeUndefined();
+    expect(sanitizeTarget({ id: 'a', rect: { x: -5, y: 0, w: 0, h: 1 } })?.rect).toEqual({ x: -5, y: 0, w: 0, h: 1 });
+  });
+  test('id / path 無しは null（rect のみも不可）', () => {
+    expect(sanitizeTarget({ rect: { x: 0, y: 0, w: 1, h: 1 } })).toBeNull();
+    expect(sanitizeTarget({ path: 'View/Text' })).toEqual({ platform: 'react-native', path: 'View/Text' });
+  });
+  test('id 超過 (201) / 型違いは null', () => {
+    expect(sanitizeTarget({ id: 'x'.repeat(201) })).toBeNull();
+    expect(sanitizeTarget({ id: 'x'.repeat(200) })?.id).toHaveLength(200);
     expect(sanitizeTarget({ id: 123 })).toBeNull();
     expect(sanitizeTarget('x')).toBeNull();
+  });
+  test('platform は react-native に上書き', () => {
+    expect(sanitizeTarget({ platform: 'ios', id: 'a' })?.platform).toBe('react-native');
   });
 });
