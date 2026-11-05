@@ -4,6 +4,8 @@ Feedpulse React Native SDK。現状は「該当箇所ピッカー」(lv-kit/feed
 
 ## 導入
 
+> **利用には Feedpulse への登録が必要。** SDK を使う前に <https://feedpulse.stargazy.xyz/> でアカウントを登録し、プロジェクトを作成して公開鍵（`pk_`）を発行する。
+
 要件: React Native（`react` / `react-native` は peerDependencies）、iOS 15.0 以上、Android minSdk 23 以上。ネイティブモジュールを含むので Expo Go では動かない（Expo は development build / prebuild が必要）。
 
 ### 1. JS パッケージを入れる
