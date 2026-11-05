@@ -10,6 +10,7 @@ const target = await pickTarget({ screen: 'Checkout' }); // キャンセル時�
 ```
 
 - `testID` を付けた要素をタップすると `target.id` に入る（iOS: accessibilityIdentifier、Android: View tag）。
+- 中の文字や子要素をタップしても親の `testID` を `id` にしたいときは、その `View` に `collapsable={false}` を付ける。付けないと、新アーキテクチャ（Fabric）のビュー平坦化で子が親の階層から外れ、子だけが選ばれて `id` が付かない（RN 0.88 の iOS で確認）。
 - `target.platform` は常に `react-native`。
 - 入力値は取得しない。`label` は先頭80文字をネイティブへ要求（上限200）。
 - エラー: `FeedpulsePickError` (`unavailable` / `already_picking` / `invalid_target` / `native_error`)。
