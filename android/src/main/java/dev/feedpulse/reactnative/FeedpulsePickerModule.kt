@@ -1,5 +1,7 @@
 package dev.feedpulse.reactnative
 
+import android.content.Context
+import android.os.Build
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -12,9 +14,14 @@ import com.feedpulse.android.picker.Feedpulse
 import com.feedpulse.android.picker.PickResult
 import com.feedpulse.android.picker.PickerHandle
 import com.feedpulse.android.picker.PickerOptions
+import com.google.android.play.core.integrity.IntegrityManagerFactory
+import com.google.android.play.core.integrity.IntegrityTokenRequest
+import java.util.TimeZone
 
 /**
  * ブリッジ層。ピッカー本体は Android SDK（`Feedpulse.pickTarget`）。
+ * アプリ証明（Play Integrity）・端末情報・config の保存は、このパッケージ自身の実装（Android SDK の新 API には依存しない）。
+ * 実機の Play Integrity 動作は CI では検証していない。
  * RN の testID は View tag に入る。
  */
 class FeedpulsePickerModule(ctx: ReactApplicationContext) : ReactContextBaseJavaModule(ctx) {
@@ -54,6 +61,51 @@ class FeedpulsePickerModule(ctx: ReactApplicationContext) : ReactContextBaseJava
     fun cancelPick() {
         UiThreadUtil.runOnUiThread { handle?.cancel() }
     }
+
+    @ReactMethod
+    fun environment(promise: Promise) {
+        val out = Arguments.createMap()
+        out.putString("platform", "android")
+        out.putString("appId", reactApplicationContext.packageName)
+        out.putString("os", "Android ${Build.VERSION.RELEASE}")
+        out.putString("timezone", TimeZone.getDefault().id)
+        promise.resolve(out)
+    }
+
+    /** classic request。サーバーは復号した判定の nonce == challenge を照合する。 */
+    @ReactMethod
+    fun attest(challenge: String, promise: Promise) {
+        try {
+            IntegrityManagerFactory.create(reactApplicationContext)
+                .requestIntegrityToken(IntegrityTokenRequest.builder().setNonce(challenge).build())
+                .addOnSuccessListener {
+                    val out = Arguments.createMap()
+                    out.putString("type", "play_integrity")
+                    out.putString("token", it.token())
+                    promise.resolve(out)
+                }
+                .addOnFailureListener { promise.reject("play_integrity_failed", it.message, it) }
+        } catch (e: Exception) {
+            promise.reject("play_integrity_failed", e.message, e)
+        }
+    }
+
+    @ReactMethod
+    fun commitAttestation(promise: Promise) = promise.resolve(null)
+
+    @ReactMethod
+    fun resetAttestation(promise: Promise) = promise.resolve(null)
+
+    @ReactMethod
+    fun storeRead(key: String, promise: Promise) = promise.resolve(prefs().getString(key, null))
+
+    @ReactMethod
+    fun storeWrite(key: String, value: String, promise: Promise) {
+        prefs().edit().putString(key, value).apply()
+        promise.resolve(null)
+    }
+
+    private fun prefs() = reactApplicationContext.getSharedPreferences("dev.feedpulse", Context.MODE_PRIVATE)
 
     private fun toWritableMap(map: Map<String, Any>): WritableMap {
         val out = Arguments.createMap()
