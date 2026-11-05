@@ -1,9 +1,9 @@
-# @feedpulse/react-native
+# @stargazy/feedpulse
 
 Feedpulse React Native SDK。現状は「該当箇所ピッカー」(lv-kit/feedpulse-web #116) のブリッジ層のみ。SDK 本体 (#3 P2) は未実装。
 
 ```ts
-import { pickTarget } from '@feedpulse/react-native';
+import { pickTarget } from '@stargazy/feedpulse';
 
 const target = await pickTarget({ screen: 'Checkout' }); // キャンセル時は null
 // submit の context.auto.target にそのまま載せる

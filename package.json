@@ -1,5 +1,5 @@
 {
-  "name": "@feedpulse/react-native",
+  "name": "@stargazy/feedpulse",
   "version": "0.1.0",
   "description": "Feedpulse React Native SDK (headless). Includes the optional target picker bridge.",
   "main": "src/index.ts",
