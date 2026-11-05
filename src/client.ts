@@ -99,6 +99,8 @@ export class FeedpulseClient {
   private readonly base: string;
 
   private session: Session | null = null;
+  /** サーバー時刻 - 端末時刻（ミリ秒）。端末の時計ずれで毎回「期限間近」にならないよう、session 応答の Date ヘッダーから求める。 */
+  private clockOffsetMs = 0;
   private sessionInFlight: Promise<string> | null = null;
   private env: AppEnvironment | null = null;
   private identityToken: string | null = null;
@@ -289,9 +291,9 @@ export class FeedpulseClient {
     return (this.env ??= await this.attestor.environment());
   }
 
-  private ensureSession(forceNew: boolean): Promise<string> {
+  private ensureSession(): Promise<string> {
     const cur = this.session;
-    if (!forceNew && cur && Math.floor(this.now() / 1000) < cur.expiresAt - SESSION_REFRESH_MARGIN_SECONDS) {
+    if (cur && Math.floor((this.now() + this.clockOffsetMs) / 1000) < cur.expiresAt - SESSION_REFRESH_MARGIN_SECONDS) {
       return Promise.resolve(cur.token);
     }
     // 同時呼び出しは 1 回の取得にまとめる（challenge は 1 回限りなので並行させない）。
@@ -347,6 +349,8 @@ export class FeedpulseClient {
     if (typeof jwt !== 'string' || jwt === '' || typeof exp !== 'number' || !Number.isFinite(exp)) {
       throw new FeedpulseError('unexpected_response', { message: 'session の応答が不正', httpStatus: res.status });
     }
+    const serverDate = Date.parse(res.headers.date ?? '');
+    if (Number.isFinite(serverDate)) this.clockOffsetMs = serverDate - this.now();
     this.session = { token: jwt, expiresAt: Math.trunc(exp) };
     await this.attestor.commit();
     return jwt;
@@ -356,21 +360,19 @@ export class FeedpulseClient {
   private async authed(method: 'GET' | 'POST', pathAndQuery: string, body?: string): Promise<FeedpulseResponse> {
     const env = await this.environment();
     let refreshed = false;
-    let forceNew = false;
     for (;;) {
-      const token = await this.ensureSession(forceNew);
+      const token = await this.ensureSession();
       try {
         return await this.call(method, pathAndQuery, body, token, env);
       } catch (e) {
         if (!(e instanceof FeedpulseError)) throw e;
         if (e.code === 'invalid_session') {
-          this.session = null;
+          if (this.session?.token === token) this.session = null; // 他のリクエストが取り直した新しいセッションは消さない
           if (refreshed) throw e;
           refreshed = true;
-          forceNew = true;
           continue;
         }
-        if (e.code === 'app_not_registered' || e.code === 'attestation_failed') this.session = null;
+        if ((e.code === 'app_not_registered' || e.code === 'attestation_failed') && this.session?.token === token) this.session = null;
         throw e;
       }
     }

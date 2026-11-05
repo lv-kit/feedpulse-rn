@@ -68,6 +68,41 @@ describe('セッション', () => {
     expect(server.count('POST /v1/native/session')).toBe(2);
   });
 
+  test('端末の時計が進んでいても、サーバーの Date ヘッダーで期限を判定する', async () => {
+    const serverNow = new Date((1_700_000_000_000 - 3_600_000)).toUTCString(); // 端末は 1 時間進んでいる
+    const { client, server } = setup({
+      'POST /v1/native/session': () => ({ ...res(fx('session-ok-app-attest-assertion').response), headers: { date: serverNow } }),
+    });
+    await client.submit({ formId: FORM_ID, fields });
+    await client.submit({ formId: FORM_ID, fields });
+    expect(server.count('POST /v1/native/session')).toBe(1);
+  });
+
+  test('遅れて返った invalid_session は、取り直された新しいセッションを消さない', async () => {
+    let sessions = 0;
+    const gate: { release?: () => void } = {};
+    const held = new Promise<void>((r) => (gate.release = r));
+    let submits = 0;
+    const { client, server } = setup({
+      'POST /v1/native/session': () => json(200, { session: `aaa.bbb.s${++sessions}`, expiresAt: 1_700_000_900 }),
+      'POST /v1/submit': async (req) => {
+        submits++;
+        const n = submits;
+        if (n === 2) await held; // 2 件目の応答を遅らせる
+        return req.headers.Authorization === 'Bearer aaa.bbb.s1'
+          ? json(401, { error: 'invalid_session' })
+          : res(fx('submit-ok').response);
+      },
+    });
+    await client.refreshConfig(); // s1 を取得
+    const a = client.submit({ formId: FORM_ID, fields }); // s1 → invalid_session → s2 で成功
+    const b = client.submit({ formId: FORM_ID, fields }); // s1 → 遅れて invalid_session
+    await a;
+    gate.release!();
+    await b;
+    expect(server.count('POST /v1/native/session')).toBe(2); // 3 回目の取り直しは起きない
+  });
+
   test('同時呼び出しはセッション取得 1 回にまとまる', async () => {
     const { client, server } = setup();
     await Promise.all([client.refreshConfig(), client.refreshConfig(), client.submit({ formId: FORM_ID, fields })]);
