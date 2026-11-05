@@ -16,7 +16,11 @@ const target = await pickTarget({ screen: 'Checkout' }); // キャンセル時�
 - `cancelPickTarget()` で実行中のピッカーを閉じる（`pickTarget` は null で解決）。
 
 ## ネイティブ依存
-- iOS: `Feedpulse`（SwiftPM, lv-kit/feedpulse-ios）を podspec の `spm_dependency` で取り込む（React Native 0.75+ が必要）。
+- iOS: `Feedpulse`（CocoaPods, lv-kit/feedpulse-ios）に依存する。トランクには未公開なので、利用アプリの `ios/Podfile` に次を追加する。
+
+```ruby
+pod 'Feedpulse', :git => 'https://github.com/lv-kit/feedpulse-ios.git', :tag => '0.1.1'
+```
 - Android: `com.feedpulse:feedpulse-picker:0.1.0` に依存する。GitHub Packages（`https://maven.pkg.github.com/lv-kit/feedpulse-android`）から取得するので、利用アプリの `android/build.gradle` の `allprojects.repositories` に次を追加する（`read:packages` 権限のトークンが要る）。
 
 ```groovy
