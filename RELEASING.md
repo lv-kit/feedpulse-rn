@@ -9,5 +9,5 @@
 ## 公開前提
 
 - iOS SDK（`lv-kit/feedpulse-ios`）に `0.1.1` 以上のタグが打たれていること（`Feedpulse.podspec` を含む版。利用側の Podfile が `:tag` で参照する）。
-- Android SDK（`com.feedpulse:feedpulse-picker`）が GitHub Packages に公開されていること（`lv-kit/feedpulse-android` で `v0.1.0` タグを push すると公開される）。
+- Android SDK（`com.feedpulse:feedpulse-picker`）が GitHub Packages に公開されていること（`lv-kit/feedpulse-android` で `vX.Y.Z` タグを push すると公開される。`android/build.gradle` の依存版と一致させる）。
 - ネイティブ側は実機・実アプリでの動作確認が済んでいること（CI は JS の typecheck / test のみ）。
