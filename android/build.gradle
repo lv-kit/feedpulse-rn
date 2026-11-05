@@ -9,5 +9,5 @@ android {
 
 dependencies {
     implementation "com.facebook.react:react-android"
-    implementation "com.feedpulse:feedpulse-picker:0.1.0"
+    implementation "com.feedpulse:feedpulse-picker:0.1.1"
 }
