@@ -2,6 +2,58 @@
 
 Feedpulse React Native SDK。現状は「該当箇所ピッカー」(lv-kit/feedpulse-web #116) のブリッジ層のみ。SDK 本体 (#3 P2) は未実装。
 
+## 導入
+
+> **利用には Feedpulse への登録が必要。** SDK を使う前に <https://feedpulse.stargazy.xyz/> でアカウントを登録し、プロジェクトを作成して公開鍵（`pk_`）を発行する。
+
+要件: React Native（`react` / `react-native` は peerDependencies）、iOS 15.0 以上、Android minSdk 23 以上。ネイティブモジュールを含むので Expo Go では動かない（Expo は development build / prebuild が必要）。
+
+### 1. JS パッケージを入れる
+
+```bash
+npm install @stargazy/feedpulse-rn
+# または yarn add @stargazy/feedpulse-rn
+```
+
+### 2. iOS
+
+`ios/Podfile` に、ネイティブ SDK（`Feedpulse`）を Git のタグで指定して追加する（CocoaPods のトランクには未公開）。
+
+```ruby
+pod 'Feedpulse', :git => 'https://github.com/lv-kit/feedpulse-ios.git', :tag => '0.1.1'
+```
+
+```bash
+cd ios && pod install
+```
+
+### 3. Android
+
+ネイティブ SDK（`com.feedpulse:feedpulse-picker:0.1.1`）は GitHub Packages にある。`read:packages` 権限のトークンを `~/.gradle/gradle.properties` に書く（コミットしない）。
+
+```properties
+gpr.user=<GitHub のユーザー名>
+gpr.key=<read:packages 権限のトークン>
+```
+
+`android/build.gradle` の `allprojects.repositories` に追加する。
+
+```groovy
+maven {
+    url = uri("https://maven.pkg.github.com/lv-kit/feedpulse-android")
+    credentials {
+        username = project.findProperty("gpr.user")
+        password = project.findProperty("gpr.key")
+    }
+}
+```
+
+### 4. ビルドし直す
+
+JS のみの再読み込みでは反映されない。`npx react-native run-ios` / `run-android`（または Xcode / Android Studio のビルド）でネイティブを再ビルドする。
+
+## 使い方
+
 ```ts
 import { pickTarget } from '@stargazy/feedpulse-rn';
 
