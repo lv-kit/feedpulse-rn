@@ -10,4 +10,5 @@ android {
 dependencies {
     implementation "com.facebook.react:react-android"
     implementation "com.feedpulse:feedpulse-picker:0.1.1"
+    implementation "com.google.android.play:integrity:1.5.0"
 }

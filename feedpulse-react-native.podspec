@@ -13,6 +13,7 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,swift}"
   s.swift_version = "5.0"
   s.dependency "React-Core"
+  s.frameworks = "DeviceCheck", "CryptoKit"
   # iOS SDK は CocoaPods の podspec（lv-kit/feedpulse-ios）。利用側の Podfile に :git と :tag の指定が要る（README 参照）。
   s.dependency "Feedpulse", "~> 0.1"
 end

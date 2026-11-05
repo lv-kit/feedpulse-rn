@@ -1,11 +1,12 @@
 {
   "name": "@stargazy/feedpulse-rn",
-  "version": "0.1.0",
-  "description": "Feedpulse React Native SDK (headless). Includes the optional target picker bridge.",
+  "version": "0.2.0",
+  "description": "Feedpulse React Native SDK (headless): config, app attestation, submit, identify, and the optional target picker.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "files": [
     "src",
+    "!src/__tests__",
     "ios",
     "android",
     "feedpulse-react-native.podspec",
