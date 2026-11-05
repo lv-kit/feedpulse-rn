@@ -22,7 +22,7 @@ const target = await pickTarget({ screen: 'Checkout' }); // キャンセル時�
 ```ruby
 pod 'Feedpulse', :git => 'https://github.com/lv-kit/feedpulse-ios.git', :tag => '0.1.1'
 ```
-- Android: `com.feedpulse:feedpulse-picker:0.1.0` に依存する。GitHub Packages（`https://maven.pkg.github.com/lv-kit/feedpulse-android`）から取得するので、利用アプリの `android/build.gradle` の `allprojects.repositories` に次を追加する（`read:packages` 権限のトークンが要る）。
+- Android: `com.feedpulse:feedpulse-picker:0.1.1` に依存する。GitHub Packages（`https://maven.pkg.github.com/lv-kit/feedpulse-android`）から取得するので、利用アプリの `android/build.gradle` の `allprojects.repositories` に次を追加する（`read:packages` 権限のトークンが要る）。
 
 ```groovy
 maven {
