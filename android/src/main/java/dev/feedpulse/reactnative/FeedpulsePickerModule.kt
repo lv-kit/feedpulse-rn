@@ -25,7 +25,7 @@ class FeedpulsePickerModule(ctx: ReactApplicationContext) : ReactContextBaseJava
     @ReactMethod
     fun pickTarget(options: ReadableMap, promise: Promise) {
         UiThreadUtil.runOnUiThread {
-            val activity = currentActivity
+            val activity = reactApplicationContext.currentActivity
             if (activity == null) {
                 promise.reject("unavailable", "No current Activity")
                 return@runOnUiThread
