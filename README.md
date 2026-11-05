@@ -17,5 +17,16 @@ const target = await pickTarget({ screen: 'Checkout' }); // キャンセル時�
 
 ## ネイティブ依存
 - iOS: `Feedpulse`（SwiftPM, lv-kit/feedpulse-ios）を podspec の `spm_dependency` で取り込む（React Native 0.75+ が必要）。
-- Android: `com.feedpulse:feedpulse-picker:0.1.0` に依存する。公開先リポジトリは利用側の `repositories` に追加する。
+- Android: `com.feedpulse:feedpulse-picker:0.1.0` に依存する。GitHub Packages（`https://maven.pkg.github.com/lv-kit/feedpulse-android`）から取得するので、利用アプリの `android/build.gradle` の `allprojects.repositories` に次を追加する（`read:packages` 権限のトークンが要る）。
+
+```groovy
+maven {
+    url = uri("https://maven.pkg.github.com/lv-kit/feedpulse-android")
+    credentials {
+        username = project.findProperty("gpr.user")
+        password = project.findProperty("gpr.key")
+    }
+}
+```
+- 最低 iOS は 15.0（iOS SDK に合わせる）。
 - 上限値 (`TARGET_LIMITS`) は web `feat/issue-105-target-picker` の #106 実装と一致済み（id 200 / label 200 / screen,path 512）。サーバーは id・path 超過で target ごと捨てる。

@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.authors      = "Feedpulse"
   s.homepage     = "https://github.com/lv-kit/feedpulse-rn"
-  s.platforms    = { :ios => "13.0" }
+  s.platforms    = { :ios => "15.0" }
   s.source       = { :git => "https://github.com/lv-kit/feedpulse-rn.git", :tag => s.version.to_s }
   s.source_files = "ios/**/*.{h,m,swift}"
   s.swift_version = "5.0"
