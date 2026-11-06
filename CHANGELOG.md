@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `target.id` の上限を 200 から 128 に修正（feedpulse-web の `MAX_TARGET_ID` に合わせる。超過するとサーバーが target ごと捨てる）。
+
 ## 0.2.0
 
 - SDK 本体を追加（ヘッドレス、UI なし）。`configure` / `identify` / `refreshConfig` / `submit`、`FeedpulseClient`。

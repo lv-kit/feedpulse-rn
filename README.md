@@ -151,7 +151,7 @@ maven {
 ```
 - アプリ証明用に、iOS は DeviceCheck / CryptoKit（OS 標準）をリンクし、Android は `com.google.android.play:integrity:1.5.0`（Maven Central / Google）に依存する。
 - 最低 iOS は 15.0（iOS SDK に合わせる）。
-- 上限値 (`TARGET_LIMITS`) は web `feat/issue-105-target-picker` の #106 実装と一致済み（id 200 / label 200 / screen,path 512）。サーバーは id・path 超過で target ごと捨てる。
+- 上限値 (`TARGET_LIMITS`) は web main の `packages/shared/src/context.ts` と一致済み（id 128 / label 200 / screen,path 512）。サーバーは id・path 超過で target ごと捨てる。
 
 ## 検証範囲
 

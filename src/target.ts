@@ -1,7 +1,7 @@
 /**
  * `context.auto.target` の型とサニタイズ。
  * スキーマの正本は lv-kit/feedpulse-web #106 (packages/shared/src/context.ts)。
- * 上限値は web の sanitizeTarget (feat/issue-105-target-picker 738b80f) と一致させる。
+ * 上限値は web の packages/shared/src/context.ts (MAX_TARGET_ID 等) と一致させる。
  * サーバーは超過時に target ごと捨てるので、SDK 側で事前に整える。
  */
 export type TargetPlatform = 'web' | 'ios' | 'android' | 'flutter' | 'react-native';
@@ -27,7 +27,7 @@ export interface FeedpulseTarget {
 
 export const TARGET_LIMITS = {
   screen: 512,
-  id: 200,
+  id: 128,
   path: 512,
   label: 200,
   rectAbs: 1_000_000,

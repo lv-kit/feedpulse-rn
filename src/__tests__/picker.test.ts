@@ -69,9 +69,9 @@ describe('sanitizeTarget (web #106 と同一規則)', () => {
     expect(sanitizeTarget({ rect: { x: 0, y: 0, w: 1, h: 1 } })).toBeNull();
     expect(sanitizeTarget({ path: 'View/Text' })).toEqual({ platform: 'react-native', path: 'View/Text' });
   });
-  test('id 超過 (201) / 型違いは null', () => {
-    expect(sanitizeTarget({ id: 'x'.repeat(201) })).toBeNull();
-    expect(sanitizeTarget({ id: 'x'.repeat(200) })?.id).toHaveLength(200);
+  test('id 超過 (129) / 型違いは null', () => {
+    expect(sanitizeTarget({ id: 'x'.repeat(129) })).toBeNull();
+    expect(sanitizeTarget({ id: 'x'.repeat(128) })?.id).toHaveLength(128);
     expect(sanitizeTarget({ id: 123 })).toBeNull();
     expect(sanitizeTarget('x')).toBeNull();
   });
