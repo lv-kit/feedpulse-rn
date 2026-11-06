@@ -5,6 +5,35 @@ FeedPulse（Cloudflare Workers 上のフィードバック収集・配信 SaaS�
 
 定義されていないコマンドを推測で書かない。
 
+## 構成
+
+- `src/`: TypeScript の SDK 本体（公開 API は `src/index.ts`。`package.json` の `main` / `types` は `src/index.ts` を直接指す。ビルド成果物は無い）
+- `src/__tests__/`: Jest のテスト。`fixtures/contract.json` が API 契約 fixture
+- `ios/`・`android/`・`feedpulse-react-native.podspec`: ネイティブ側（target picker 等）。iOS は `Feedpulse` Pod（`lv-kit/feedpulse-ios`）、Android は `com.feedpulse:feedpulse-picker`（`lv-kit/feedpulse-android`）の版に依存する。版は `podspec` と `android/build.gradle` で指定する
+
+## 検証
+
+CI（`.github/workflows/ci.yml`）と同じ。`package.json` のスクリプトと `npm pack --dry-run` だけが定義済みのコマンド。
+
+```sh
+npm ci
+npm run typecheck
+npm test
+npm pack --dry-run
+```
+
+CI が見るのは JS のみ。`ios/`・`android/` を変えたときは実機・実アプリで確認し、確認できなかったことは PR に書く。
+
+## API 契約
+
+- 正本は `lv-kit/feedpulse-web` の `apps/ingest` と `packages/shared/src/native/fixtures/contract.json`。`src/__tests__/fixtures/contract.json` はその複製で、`contract.test.ts` がサーバーのモックとして読む
+- fixture をこのリポジトリで編集しない。API が変わるときは web 側を直してから複製を差し替える
+- 契約テストが落ちたら、テストや fixture を合わせて通すのではなく、web 側の契約との差を先に確認する
+
+## リリース
+
+手順は [RELEASING.md](RELEASING.md)。`npm publish` と tag の push はメンテナだけが行う（公開は取り消しにくい）。エージェントは `package.json` の `version` と `CHANGELOG.md` の更新、PR までを担当し、公開・tag 付けはしない。
+
 ## 言語ルール
 
 - **Issue・PR（タイトル・本文・コメント・レビュー返信）・コミットメッセージ**: 日本語
