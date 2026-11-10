@@ -107,6 +107,12 @@ export class FeedpulseClient {
   private _config: FeedpulseConfig | null = null;
   private _lastError: FeedpulseError | null = null;
   private cacheLoad: Promise<void> | null = null;
+  /** `refreshConfig` の開始順の連番。古い要求の結果が新しい結果を上書きしないための世代。 */
+  private configSeq = 0;
+  /** メモリへ反映済みの最新の世代。 */
+  private appliedConfigSeq = 0;
+  /** config 保存の直列化用。保存の完了順が開始順と入れ替わらないようにする。 */
+  private configWrite: Promise<void> = Promise.resolve();
 
   constructor(o: FeedpulseClientOptions) {
     this.publicKey = o.publicKey;
@@ -172,6 +178,7 @@ export class FeedpulseClient {
 
   /** `GET /v1/config` を取りに行く。通信に失敗したら前回値（`isStale === true`）を返し、前回値も無ければ throw。 */
   async refreshConfig(): Promise<FeedpulseConfig> {
+    const seq = ++this.configSeq;
     await this.ensureCacheLoaded();
     try {
       const res = await this.authed('GET', `/v1/config?pk=${encodeURIComponent(this.publicKey)}`);
@@ -187,19 +194,27 @@ export class FeedpulseClient {
         });
       }
       const fresh: FeedpulseConfig = { forms, fetchedAt: this.now(), isStale: false };
+      // より新しい要求の結果を反映済みなら、この（古い）応答は捨てる。
+      if (seq < this.appliedConfigSeq && this._config) return this._config;
+      this.appliedConfigSeq = seq;
       this._config = fresh;
       this._lastError = null;
-      try {
-        await this.store.write(
-          this.cacheKey,
-          JSON.stringify({ fetchedAt: fresh.fetchedAt, forms: forms.map(formToJson) }),
-        );
-      } catch {
-        // 保存に失敗しても取得は成功
-      }
+      const serialized = JSON.stringify({ fetchedAt: fresh.fetchedAt, forms: forms.map(formToJson) });
+      this.configWrite = this.configWrite.then(async () => {
+        // 順番待ちの間に新しい結果が反映されたら、古い値は保存しない。
+        if (seq < this.appliedConfigSeq) return;
+        try {
+          await this.store.write(this.cacheKey, serialized);
+        } catch {
+          // 保存に失敗しても取得は成功
+        }
+      });
+      await this.configWrite;
       return fresh;
     } catch (e) {
       if (!(e instanceof FeedpulseError)) throw e;
+      // より新しい要求の結果を反映済みなら、古い要求の失敗で状態を書き換えない。
+      if (seq < this.appliedConfigSeq && this._config) return this._config;
       this._lastError = e;
       if (this._config) return (this._config = { ...this._config, isStale: true });
       throw e;
