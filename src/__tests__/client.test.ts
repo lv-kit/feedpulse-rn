@@ -282,6 +282,76 @@ describe('config とキャッシュ', () => {
   });
 });
 
+describe('config の並行取得', () => {
+  function configWith(options: unknown) {
+    const body = JSON.parse(JSON.stringify(CONFIG_BODY));
+    body.forms[0].definition.blocks[2].options = options;
+    return body;
+  }
+  const OLD = configWith([{ value: 'low', label: '低' }]);
+  const NEW = configWith([{ value: 'high', label: '高' }]);
+  const optionsOf = (c: { forms: any[] } | null) => c?.forms[0].blocks[2].options;
+
+  test('後から始めた取得が先に完了したら、遅れて返った古い応答で上書きしない', async () => {
+    let releaseOld!: () => void;
+    const { client } = setup({
+      'GET /v1/config': (_req, n) =>
+        n === 1 ? new Promise((r) => (releaseOld = () => r(json(200, OLD)))) : json(200, NEW),
+    });
+    const first = client.refreshConfig();
+    await new Promise((r) => setTimeout(r, 0));
+    const second = await client.refreshConfig();
+    releaseOld();
+    const late = await first;
+    expect(optionsOf(second)).toEqual([{ value: 'high', label: '高' }]);
+    expect(optionsOf(client.config)).toEqual([{ value: 'high', label: '高' }]);
+    expect(client.config?.isStale).toBe(false);
+    expect(optionsOf(late)).toEqual([{ value: 'high', label: '高' }]);
+  });
+
+  test('保存の完了順が入れ替わっても、保存値は新しい config になる', async () => {
+    const inner = new MemoryConfigStore();
+    const releases: (() => void)[] = [];
+    let writes = 0;
+    const store = {
+      read: (k: string) => inner.read(k),
+      write: (k: string, v: string) => {
+        const n = ++writes;
+        // 最初の保存だけ完了を遅らせる。
+        if (n === 1) return new Promise<void>((r) => releases.push(() => void inner.write(k, v).then(r)));
+        return inner.write(k, v);
+      },
+    } as unknown as MemoryConfigStore;
+    const { client } = setup(
+      { 'GET /v1/config': (_req, n) => json(200, n === 1 ? OLD : NEW) },
+      { store },
+    );
+    const first = client.refreshConfig();
+    await new Promise((r) => setTimeout(r, 0));
+    const second = client.refreshConfig();
+    await new Promise((r) => setTimeout(r, 0));
+    releases.forEach((r) => r());
+    await Promise.all([first, second]);
+    const cached = await setup({}, { store: inner }).client.loadCachedConfig();
+    expect(optionsOf(cached)).toEqual([{ value: 'high', label: '高' }]);
+  });
+
+  test('古い取得の失敗が、新しく取れた config を stale にしない', async () => {
+    let failOld!: () => void;
+    const { client } = setup({
+      'GET /v1/config': (_req, n) =>
+        n === 1 ? new Promise((r) => (failOld = () => r(json(500, {})))) : json(200, NEW),
+    });
+    const first = client.refreshConfig();
+    await new Promise((r) => setTimeout(r, 0));
+    await client.refreshConfig();
+    failOld();
+    await first;
+    expect(client.config?.isStale).toBe(false);
+    expect(client.lastError).toBeNull();
+  });
+});
+
 describe('validateFields', () => {
   const form = parseForm({
     id: 'f', slug: 's', name: 'n', type: 'bug', version: 1,
