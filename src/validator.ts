@@ -22,14 +22,17 @@ function check(b: FeedpulseBlock, v: unknown): FieldErrorCode | null {
       return b.maxLength !== undefined && v.length > b.maxLength ? 'too_long' : null;
     case 'email':
       if (typeof v !== 'string') return 'type';
-      if (b.maxLength !== undefined && v.length > b.maxLength) return 'too_long';
-      return EMAIL.test(v) ? null : 'invalid_email';
+      { const text = v.replace(/[\u0000-\u001f\u007f]/g, '').trim();
+        if (b.maxLength !== undefined && text.length > b.maxLength) return 'too_long';
+        return text.length <= 254 && EMAIL.test(text) ? null : 'invalid_email'; }
     case 'number':
-    case 'rating':
       if (!finite(v)) return 'type';
       if (b.min !== undefined && v < b.min) return 'out_of_range';
       if (b.max !== undefined && v > b.max) return 'out_of_range';
       return null;
+    case 'rating':
+      if (!finite(v) || !Number.isInteger(v)) return 'type';
+      return v < 1 || (b.min !== undefined && v < b.min) || (b.max !== undefined && v > b.max) ? 'out_of_range' : null;
     case 'select':
     case 'radio':
       if (typeof v !== 'string') return 'type';
