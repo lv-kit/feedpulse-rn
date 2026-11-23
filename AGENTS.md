@@ -13,7 +13,7 @@ FeedPulse（Cloudflare Workers 上のフィードバック収集・配信 SaaS�
 
 ## 検証
 
-CI（`.github/workflows/ci.yml`）と同じ。`package.json` のスクリプトと `npm pack --dry-run` だけが定義済みのコマンド。
+`package.json` のスクリプトと `npm pack --dry-run` だけが定義済みのコマンド。デプロイ作業以外の検証用CI（GitHub Actions 等）は作らない。PR 作成前に `npm run typecheck`、`npm test`、`npm pack --dry-run` をローカルで実行し、すべて成功させる。実行できない場合や失敗した場合は PR を作成しない。CI を追加してよいのはデプロイ作業だけ。Branch protection に必須の `CI` ステータスチェックが設定されている場合は外す。
 
 ```sh
 npm ci
@@ -22,7 +22,7 @@ npm test
 npm pack --dry-run
 ```
 
-CI が見るのは JS のみ。`ios/`・`android/` を変えたときは実機・実アプリで確認し、確認できなかったことは PR に書く。
+上記が見るのは JS のみ。`ios/`・`android/` を変えたときは実機・実アプリで確認し、確認できなかったことは PR に書く。
 
 ## API 契約
 
