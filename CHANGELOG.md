@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 開発用: lint を oxlint（型認識あり）に、TypeScript を 7 系に、Jest の変換を `@swc/jest` に更新（SDK の公開 API に変更なし）。
 - `target.id` の上限を 200 から 128 に修正（feedpulse-web の `MAX_TARGET_ID` に合わせる。超過するとサーバーが target ごと捨てる）。
 
 ## 0.2.0

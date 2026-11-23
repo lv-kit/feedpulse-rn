@@ -155,6 +155,6 @@ maven {
 
 ## 検証範囲
 
-契約 fixture を使った単体テスト（HTTP とアプリ証明を差し替え）、`tsc`、`npm pack --dry-run` はリリース前にローカルで確認している（検証用CIは置かない）。**実機の App Attest / Play Integrity の動作と、ネイティブコード（Swift / Kotlin）のビルドは未検証**（ローカル検証は JS のみ。実機・実サーバーでの疎通は手作業で確認が必要）。
+契約 fixture を使った単体テスト（HTTP とアプリ証明を差し替え）、`oxlint`、`tsc`、`npm pack --dry-run` はリリース前にローカルで確認している（検証用CIは置かない）。**実機の App Attest / Play Integrity の動作と、ネイティブコード（Swift / Kotlin）のビルドは未検証**（ローカル検証は JS のみ。実機・実サーバーでの疎通は手作業で確認が必要）。
 
 テストは web の契約 fixture（`src/__tests__/fixtures/contract.json`。正本は feedpulse-web の `packages/shared/src/native/fixtures/`）を読み、HTTP とアプリ証明を差し替えて検証する。
