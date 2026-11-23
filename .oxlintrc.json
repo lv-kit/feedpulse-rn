@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript"],
+  "categories": { "correctness": "error" },
+  "env": { "builtin": true, "es2022": true, "node": true },
+  "ignorePatterns": ["android/**", "ios/**", "node_modules/**"],
+  "rules": {
+    "no-control-regex": "off",
+    "eqeqeq": ["warn", "smart"],
+    "no-var": "error",
+    "no-unused-vars": ["warn", { "vars": "all", "args": "none", "ignoreRestSiblings": true, "caughtErrors": "all", "caughtErrorsIgnorePattern": "^_" }],
+    "typescript/no-deprecated": "error"
+  },
+  "options": { "typeAware": true }
+}
