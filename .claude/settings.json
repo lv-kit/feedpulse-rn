@@ -3,7 +3,8 @@
     "open-code-review": {
       "source": {
         "source": "github",
-        "repo": "alibaba/open-code-review"
+        "repo": "alibaba/open-code-review",
+        "ref": "v1.9.9"
       }
     }
   },
