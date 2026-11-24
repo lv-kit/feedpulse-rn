@@ -384,6 +384,27 @@ describe('configure', () => {
     expect(() => configure({ publicKey: 'pk_x', baseUrl: 'ftp://x' })).toThrow(expect.objectContaining({ code: 'not_configured' }));
     expect(configure({ publicKey: 'pk_x', baseUrl: 'http://10.0.2.2:8787' }).baseUrl).toBe('http://10.0.2.2:8787');
     expect(() => configure({ publicKey: 'pk_x', baseUrl: 'http://localhost.evil.com' })).toThrow();
+    for (const bad of [
+      'http://localhost:80@attacker.example',
+      'http://localhost@attacker.example',
+      'http://user:pass@localhost:8787',
+      'https://user:pass@ingest.example.test',
+      'https://ingest.example.test@attacker.example',
+      'http://localhost\\@attacker.example',
+      'http://localhost:abc',
+      'http://localhost:99999',
+      'http://localhost:',
+      'http://localhost .evil.com',
+      'http://',
+      'https://',
+      'not a url',
+      '',
+    ]) {
+      expect(() => configure({ publicKey: 'pk_x', baseUrl: bad })).toThrow(expect.objectContaining({ code: 'not_configured' }));
+    }
+    expect(configure({ publicKey: 'pk_x', baseUrl: 'http://localhost:8787/api?x=a@b' }).baseUrl).toBe('http://localhost:8787/api?x=a@b');
+    expect(configure({ publicKey: 'pk_x', baseUrl: 'http://127.0.0.1' }).baseUrl).toBe('http://127.0.0.1');
+    expect(configure({ publicKey: 'pk_x', baseUrl: 'https://ingest.example.test:8443/' }).baseUrl).toBe('https://ingest.example.test:8443/');
     const c = configure({ publicKey: 'pk_x' });
     expect(c.baseUrl).toBe('https://ingest.feedpulse.stargazy.xyz');
     expect(getClient()).toBe(c);
