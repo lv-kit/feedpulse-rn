@@ -1,0 +1,14 @@
+{
+  "extraKnownMarketplaces": {
+    "open-code-review": {
+      "source": {
+        "source": "github",
+        "repo": "alibaba/open-code-review",
+        "ref": "v1.9.9"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "open-code-review@open-code-review": true
+  }
+}
