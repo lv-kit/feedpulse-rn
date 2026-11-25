@@ -43,6 +43,13 @@ test('native エラーは native_error', async () => {
   await expect(pickTarget()).rejects.toMatchObject({ code: 'native_error', message: 'boom' });
 });
 
+test.each(['invalid_options', 'pick_failed'])('native の %s 拒否は native_error で伝わる', async (code) => {
+  pick.mockRejectedValue(Object.assign(new Error('bad options'), { code }));
+  await expect(pickTarget()).rejects.toMatchObject({ code: 'native_error', message: 'bad options' });
+  pick.mockResolvedValue(null);
+  await expect(pickTarget()).resolves.toBeNull();
+});
+
 test('web 等は unavailable', async () => {
   os = 'web';
   await expect(pickTarget()).rejects.toMatchObject({ code: 'unavailable' });

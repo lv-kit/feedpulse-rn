@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Android の `pickTarget` が不正なオプション（`labelMaxLength` が数値以外・非整数、`screen` が文字列以外）で Promise を reject しないまま残る問題を修正。`invalid_options` で reject し、UI スレッド内・結果コールバック内の例外も `pick_failed` で reject する（JS 側では `native_error`）。
 - `configure` の `baseUrl` 検証を修正。`http://localhost:80@attacker.example` のように URL の認証情報でローカルホスト判定を回避できた問題を、URL 全体の検証（認証情報・バックスラッシュ・空白・不正なポートの拒否）に変更。
 - 開発用: lint を oxlint（型認識あり）に、TypeScript を 7 系に、Jest の変換を `@swc/jest` に更新（SDK の公開 API に変更なし）。
 - `target.id` の上限を 200 から 128 に修正（feedpulse-web の `MAX_TARGET_ID` に合わせる。超過するとサーバーが target ごと捨てる）。

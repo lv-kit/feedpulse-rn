@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableType
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.bridge.WritableMap
 import com.feedpulse.android.picker.Feedpulse
@@ -31,30 +32,68 @@ class FeedpulsePickerModule(ctx: ReactApplicationContext) : ReactContextBaseJava
 
     @ReactMethod
     fun pickTarget(options: ReadableMap, promise: Promise) {
+        val labelMax: Int
+        val screen: String?
+        try {
+            labelMax = readLabelMaxLength(options)
+            screen = readScreen(options)
+        } catch (e: IllegalArgumentException) {
+            promise.reject("invalid_options", e.message)
+            return
+        }
         UiThreadUtil.runOnUiThread {
-            val activity = reactApplicationContext.currentActivity
-            if (activity == null) {
-                promise.reject("unavailable", "No current Activity")
-                return@runOnUiThread
-            }
-            if (handle?.isActive == true) {
-                promise.reject("already_picking", "A target pick is already in progress")
-                return@runOnUiThread
-            }
-            val labelMax = if (options.hasKey("labelMaxLength")) options.getInt("labelMaxLength") else 40
-            val screen = if (options.hasKey("screen")) options.getString("screen") else null
-            handle = Feedpulse.pickTarget(
-                activity,
-                PickerOptions(labelMaxChars = labelMax.coerceIn(0, 200), screenName = screen),
-            ) { result ->
-                handle = null
-                when (result) {
-                    is PickResult.Selected -> promise.resolve(toWritableMap(result.target.toMap()))
-                    PickResult.Cancelled -> promise.resolve(null)
-                    is PickResult.Unavailable -> promise.reject("unavailable", "Picker unavailable: ${result.reason}")
+            try {
+                val activity = reactApplicationContext.currentActivity
+                if (activity == null) {
+                    promise.reject("unavailable", "No current Activity")
+                    return@runOnUiThread
                 }
+                if (handle?.isActive == true) {
+                    promise.reject("already_picking", "A target pick is already in progress")
+                    return@runOnUiThread
+                }
+                handle = Feedpulse.pickTarget(
+                    activity,
+                    PickerOptions(labelMaxChars = labelMax, screenName = screen),
+                ) { result ->
+                    handle = null
+                    try {
+                        when (result) {
+                            is PickResult.Selected -> promise.resolve(toWritableMap(result.target.toMap()))
+                            PickResult.Cancelled -> promise.resolve(null)
+                            is PickResult.Unavailable -> promise.reject("unavailable", "Picker unavailable: ${result.reason}")
+                        }
+                    } catch (e: Exception) {
+                        promise.reject("pick_failed", e.message, e)
+                    }
+                }
+            } catch (e: Exception) {
+                handle = null
+                promise.reject("pick_failed", e.message, e)
             }
         }
+    }
+
+    /** 未指定・null は既定の 40。数値以外・非有限・整数でない値は `invalid_options`。 */
+    private fun readLabelMaxLength(options: ReadableMap): Int {
+        if (!options.hasKey("labelMaxLength") || options.isNull("labelMaxLength")) return 40
+        if (options.getType("labelMaxLength") != ReadableType.Number) {
+            throw IllegalArgumentException("labelMaxLength must be a number")
+        }
+        val v = options.getDouble("labelMaxLength")
+        if (v.isNaN() || v.isInfinite() || v != Math.floor(v)) {
+            throw IllegalArgumentException("labelMaxLength must be an integer")
+        }
+        return v.coerceIn(0.0, 200.0).toInt()
+    }
+
+    /** 未指定・null は指定なし。文字列以外は `invalid_options`。 */
+    private fun readScreen(options: ReadableMap): String? {
+        if (!options.hasKey("screen") || options.isNull("screen")) return null
+        if (options.getType("screen") != ReadableType.String) {
+            throw IllegalArgumentException("screen must be a string")
+        }
+        return options.getString("screen")
     }
 
     @ReactMethod
